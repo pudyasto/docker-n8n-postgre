@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: n8n_postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=db_n8n
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1234
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432   # optional, hapus jika tidak perlu akses dari luar
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n_app
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=db_n8n
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=1234
+      - N8N_SECURE_COOKIE=false
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_RUNNERS_ENABLED=true
+    ports:
+      - 5678:5678
+    volumes:
+      - ./n8n_storage:/home/node/.n8n
+      - ./export_file:/home/node/export_file
