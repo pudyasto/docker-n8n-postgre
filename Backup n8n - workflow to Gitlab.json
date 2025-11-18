@@ -1,0 +1,495 @@
+{
+  "name": "Backup n8n - workflow to Gitlab",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a3b83b3b-3e2f-4d81-80df-daab95b48cc9",
+      "name": "On clicking 'execute'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        1216,
+        112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{$json[\"github_status\"]}}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "same"
+            },
+            {
+              "value2": "different",
+              "output": 1
+            },
+            {
+              "value2": "new",
+              "output": 2
+            }
+          ]
+        }
+      },
+      "id": "ffa126a8-cd05-4f3e-b5b5-4d213d7fe337",
+      "name": "github_status",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        2928,
+        144
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "2597f2be-43cb-4f61-bfb9-edc23f10e1b6",
+      "name": "same",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        3168,
+        -64
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "000dc533-b0fb-45fb-9036-638cbbb41f86",
+      "name": "different",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        3168,
+        176
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "6868474c-2253-4a5f-a029-0e5e01b5d0ad",
+      "name": "new",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        3168,
+        368
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "bb01cb0d-7514-4f34-b8bb-395f9187dfc2",
+      "name": "OneAtATime",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        1840,
+        176
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "repo.owner",
+              "value": "[git-username]"
+            },
+            {
+              "name": "repo.name",
+              "value": "[git-repo]"
+            },
+            {
+              "name": "repo.path"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6061b1eb-77da-4bed-a192-2836b1cfaccf",
+      "name": "Globals",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1408,
+        176
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 12
+            }
+          ]
+        }
+      },
+      "id": "a7d5040f-3a4a-4c32-a697-e41b1b57a27a",
+      "name": "Every 12 hours",
+      "type": "n8n-nodes-base.cron",
+      "position": [
+        1216,
+        304
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Workflow Backups\nThis workflow will automatically backup your workflows to your Gitlab account every 12 hours.\n\n### Setup\nOpen Globals and update the values below\n**repo.owner:** This is your Gitlab username\n**repo.name:** This is the name of your repository\n**repo.path:** This is the folder to use within the repository, If it doesn't exist it will be created.\n\nIf your username was `n8n-io` and your repository was called `n8n-backups` and you wanted the workflows to go into a `workflows` folder you would set:\n\nrepo.owner - n8n-io\nrepo.name - n8n-backups\nrepo.path - workflows",
+        "height": 721,
+        "width": 726
+      },
+      "id": "64105f06-6a89-44a9-9249-c9df483baddd",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1008,
+        -240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Single Item Loop\nWe process each workflow item one at a time, We first check Gitlab to see if a file exists then we merge the Gitlab Data and the API item so we can check if the values match in the function node `isDiffOrNew` we then set a status of `same`, `different` or `new`",
+        "height": 728,
+        "width": 755,
+        "color": 3
+      },
+      "id": "065b3370-09a7-4175-8d47-5a832c8809c0",
+      "name": "Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1824,
+        -240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Save the data\nUsing the switch node we work out what to do based on the previous status,  If it is the same we do nothing, If it is different we update the file in Gitlab and if it is new we create a new file. After this is done we loop back to the Split in Batches node (OneAtAtTime) to start the process again.",
+        "height": 678,
+        "width": 890,
+        "color": 4
+      },
+      "id": "bd81fa97-8171-40a8-8a5d-7ade6c9e36e0",
+      "name": "Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2672,
+        -192
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "filters": {},
+        "requestOptions": {}
+      },
+      "id": "ad5360e9-a62f-49bd-89cd-c045a97f87b8",
+      "name": "n8n",
+      "type": "n8n-nodes-base.n8n",
+      "position": [
+        1600,
+        176
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "n8nApi": {
+          "id": "yGXHxtcV5GvMwMA6",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// File Returned with Content\nif (Object.keys($input.all()[0].json).includes(\"content\")) {\n  // Get JSON Objects\n  var origWorkflow = JSON.parse(Buffer.from($input.all()[0].json.content, 'base64'));\n  var n8nWorkflow = $input.all()[1].json;\n  \n  // Order JSON Objects\n  var orderedOriginal = {}\n  var orderedActual = {}\n  \n  Object.keys(origWorkflow).sort().forEach(function(key) {\n    orderedOriginal[key] = origWorkflow[key];\n  });\n  \n  Object.keys(n8nWorkflow).sort().forEach(function(key) {\n    orderedActual[key] = n8nWorkflow[key];\n  });\n\n  // Determine Difference\n  if ( JSON.stringify(orderedOriginal) === JSON.stringify(orderedActual) ) {\n    $input.all()[0].json.github_status = \"same\";\n    $input.all()[0].json.content_decoded = orderedOriginal;\n  } else {\n    $input.all()[0].json.github_status = \"different\";\n    $input.all()[0].json.content_decoded = orderedOriginal;\n    $input.all()[0].json.n8n_data_stringy = JSON.stringify(orderedActual, null, 2);\n  }\n// No File Returned / New Workflow\n} else {\n  // Order JSON Object\n  var n8nWorkflow = ($input.all()[1].json);\n  var orderedActual = {}\n  Object.keys(n8nWorkflow).sort().forEach(function(key) {\n    orderedActual[key] = n8nWorkflow[key];\n  });\n  \n  // Proper Formatting\n  $input.all()[0].json.github_status = \"new\";\n  $input.all()[0].json.n8n_data_stringy = JSON.stringify(orderedActual, null, 2);\n}\n\n// Return Items\nreturn $input.all();"
+      },
+      "id": "a6bdde81-8e0b-4aaf-ba26-d5f9fc23cea0",
+      "name": "isDiffOrNew",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2688,
+        144
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "8216614b-3b07-4b96-9340-8c996ee482f3",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        2448,
+        144
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": "={{ $('Globals').item.json.repo.owner }}",
+        "repository": "={{ $('Globals').item.json.repo.name }}",
+        "filePath": "={{$node[\"Globals\"].json[\"repo\"][\"path\"]}}{{$json[\"name\"]}}.json",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      },
+      "id": "098f20fc-0564-4f96-aea5-cd3b7254bb5f",
+      "name": "GitLab",
+      "type": "n8n-nodes-base.gitlab",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        16
+      ],
+      "credentials": {
+        "gitlabApi": {
+          "id": "5OcVJC8BmBKfG0kn",
+          "name": "pudyasto-account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "owner": "={{ $('Globals').item.json.repo.owner }}",
+        "repository": "={{ $('Globals').item.json.repo.name }}",
+        "filePath": "={{$node[\"Globals\"].json[\"repo\"][\"path\"]}}{{$node[\"OneAtATime\"].json[\"name\"]}}.json",
+        "fileContent": "={{$node[\"isDiffOrNew\"].json[\"n8n_data_stringy\"]}}",
+        "commitMessage": "=[N8N Backup] {{$node[\"OneAtATime\"].json[\"name\"]}}.json ({{$json[\"github_status\"]}})",
+        "branch": "master"
+      },
+      "id": "42a0843c-78d4-40cf-9379-07aab42fb7d3",
+      "name": "GitLab Create",
+      "type": "n8n-nodes-base.gitlab",
+      "typeVersion": 1,
+      "position": [
+        3360,
+        368
+      ],
+      "credentials": {
+        "gitlabApi": {
+          "id": "5OcVJC8BmBKfG0kn",
+          "name": "pudyasto-account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "edit",
+        "owner": "={{ $('Globals').item.json.repo.owner }}",
+        "repository": "={{ $('Globals').item.json.repo.name }}",
+        "filePath": "={{$node[\"Globals\"].json[\"repo\"][\"path\"]}}{{$node[\"OneAtATime\"].json[\"name\"]}}.json",
+        "fileContent": "={{$node[\"isDiffOrNew\"].json[\"n8n_data_stringy\"]}}",
+        "commitMessage": "=[N8N Backup] {{$node[\"OneAtATime\"].json[\"name\"]}}.json ({{$json[\"github_status\"]}})",
+        "branch": "master"
+      },
+      "id": "6c1e086a-0a07-45af-b171-e01e6a49a15e",
+      "name": "GitLab Edit",
+      "type": "n8n-nodes-base.gitlab",
+      "typeVersion": 1,
+      "position": [
+        3360,
+        176
+      ],
+      "credentials": {
+        "gitlabApi": {
+          "id": "5OcVJC8BmBKfG0kn",
+          "name": "pudyasto-account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "n8n": {
+      "main": [
+        [
+          {
+            "node": "OneAtATime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "new": {
+      "main": [
+        [
+          {
+            "node": "GitLab Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "same": {
+      "main": [
+        [
+          {
+            "node": "OneAtATime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "isDiffOrNew",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Globals": {
+      "main": [
+        [
+          {
+            "node": "n8n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "different": {
+      "main": [
+        [
+          {
+            "node": "GitLab Edit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OneAtATime": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "GitLab",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "isDiffOrNew": {
+      "main": [
+        [
+          {
+            "node": "github_status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "github_status": {
+      "main": [
+        [
+          {
+            "node": "same",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "different",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "new",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 12 hours": {
+      "main": [
+        [
+          {
+            "node": "Globals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "Globals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab Create": {
+      "main": [
+        [
+          {
+            "node": "OneAtATime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab Edit": {
+      "main": [
+        [
+          {
+            "node": "OneAtATime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d7c4e813-fdd9-43e3-8630-8ab88ce92081",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3c322835474043e7f24a25f4f01931b0562911833830da41dc9fd031d02eb2b3"
+  },
+  "id": "vgmJHlPhrefraOsv",
+  "tags": []
+}
