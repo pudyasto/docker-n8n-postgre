@@ -10,7 +10,7 @@ services:
     volumes:
       - ./data:/var/lib/postgresql/data
     ports:
-      - 5432:5432   # optional, hapus jika tidak perlu akses dari luar
+      - 5432:5432
 
   n8n:
     image: docker.n8n.io/n8nio/n8n
